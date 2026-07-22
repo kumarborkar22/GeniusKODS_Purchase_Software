@@ -702,45 +702,49 @@
     /*------------------
 		Navigation
 	--------------------*/
-    $(".mobile-menu").slicknav({
-        prependTo: '#mobile-menu-wrap',
-        allowParentLinks: true
-    });
+    if ($.fn.slicknav) {
+        $(".mobile-menu").slicknav({
+            prependTo: '#mobile-menu-wrap',
+            allowParentLinks: true
+        });
+    }
 
     /*-----------------------
         Categories Slider
     ------------------------*/
-    $(".categories__slider").owlCarousel({
-        loop: true,
-        margin: 0,
-        items: 4,
-        dots: false,
-        nav: true,
-        navText: ["<span class='fa fa-angle-left'><span/>", "<span class='fa fa-angle-right'><span/>"],
-        animateOut: 'fadeOut',
-        animateIn: 'fadeIn',
-        smartSpeed: 1200,
-        autoHeight: false,
-        autoplay: true,
-        responsive: {
+    if ($.fn.owlCarousel) {
+        $(".categories__slider").owlCarousel({
+            loop: true,
+            margin: 0,
+            items: 4,
+            dots: false,
+            nav: true,
+            navText: ["<span class='fa fa-angle-left'><span/>", "<span class='fa fa-angle-right'><span/>"],
+            animateOut: 'fadeOut',
+            animateIn: 'fadeIn',
+            smartSpeed: 1200,
+            autoHeight: false,
+            autoplay: true,
+            responsive: {
 
-            0: {
-                items: 1,
-            },
+                0: {
+                    items: 1,
+                },
 
-            480: {
-                items: 2,
-            },
+                480: {
+                    items: 2,
+                },
 
-            768: {
-                items: 3,
-            },
+                768: {
+                    items: 3,
+                },
 
-            992: {
-                items: 4,
+                992: {
+                    items: 4,
+                }
             }
-        }
-    });
+        });
+    }
 
 
     $('.hero__categories__all').on('click', function(){
@@ -809,28 +813,32 @@
     /*-----------------------
 		Price Range Slider
 	------------------------ */
-    var rangeSlider = $(".price-range"),
-        minamount = $("#minamount"),
-        maxamount = $("#maxamount"),
-        minPrice = rangeSlider.data('min'),
-        maxPrice = rangeSlider.data('max');
-    rangeSlider.slider({
-        range: true,
-        min: minPrice,
-        max: maxPrice,
-        values: [minPrice, maxPrice],
-        slide: function (event, ui) {
-            minamount.val('$' + ui.values[0]);
-            maxamount.val('$' + ui.values[1]);
-        }
-    });
+    if ($.fn.slider) {
+        var rangeSlider = $(".price-range"),
+            minamount = $("#minamount"),
+            maxamount = $("#maxamount"),
+            minPrice = rangeSlider.data('min'),
+            maxPrice = rangeSlider.data('max');
+        rangeSlider.slider({
+            range: true,
+            min: minPrice,
+            max: maxPrice,
+            values: [minPrice, maxPrice],
+            slide: function (event, ui) {
+                minamount.val('$' + ui.values[0]);
+                maxamount.val('$' + ui.values[1]);
+            }
+        });
+    }
     minamount.val('$' + rangeSlider.slider("values", 0));
     maxamount.val('$' + rangeSlider.slider("values", 1));
 
     /*--------------------------
         Select
     ----------------------------*/
-    $("select").niceSelect();
+    if ($.fn.niceSelect) {
+        $("select").niceSelect();
+    }
 
     /*------------------
 		Single Product

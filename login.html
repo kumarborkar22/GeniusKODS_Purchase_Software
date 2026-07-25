@@ -1,74 +1,115 @@
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="description" content="Cafe One Login">
-    <meta name="keywords" content="Cafe One, login, access, approved users">
+    <meta name="keywords" content="Cafe One, Login">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cafe One | Login</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
-    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
-    <link rel="stylesheet" href="css/nice-select.css" type="text/css">
-    <link rel="stylesheet" href="css/jquery-ui.min.css" type="text/css">
-    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
-    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
     <style>
-        .login-hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #f7f4ef 0%, #fff 50%, #eef7ef 100%);
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg,#f7f4ef,#ffffff,#eef7ef);
         }
 
-        .login-card {
-            background: #fff;
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.08);
+        .login-hero{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
         }
 
-        .login-card .site-btn {
-            width: 100%;
+        .login-card{
+            background:#fff;
+            border-radius:20px;
+            padding:40px;
+            box-shadow:0 20px 60px rgba(0,0,0,.08);
+        }
+
+        .site-btn{
+            width:100%;
+            border:none;
+            padding:14px;
+            background:#7fad39;
+            color:#fff;
+            font-weight:bold;
+            cursor:pointer;
+        }
+
+        input{
+            width:100%;
+            padding:12px;
+            border:1px solid #ddd;
+            margin-bottom:20px;
+        }
+
+        #login-status{
+            min-height:24px;
         }
     </style>
 </head>
 
 <body>
-    <section class="login-hero">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-5 col-md-8">
-                    <div class="login-card">
-                        <h3 class="mb-3">Approved User Login</h3>
-                        <p class="mb-4">Approved cafe users and admins can sign in here.</p>
-                        <form id="login-form">
-                            <div class="checkout__input">
-                                <p>Email<span>*</span></p>
-                                <input type="email" id="login-email" placeholder="Approved email" required>
-                            </div>
-                            <div class="checkout__input">
-                                <p>Access Code<span>*</span></p>
-                                <input type="password" id="login-access-code" placeholder="Access code" required>
-                            </div>
-                            <p id="login-status" class="mb-3"></p>
-                            <button type="submit" class="site-btn">SIGN IN</button>
-                        </form>
-                        <p class="mt-3 mb-0"><a href="./index.html">Back to home</a></p>
-                    </div>
+
+<section class="login-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+
+                <div class="login-card">
+
+                    <h2>Approved User Login</h2>
+
+                    <p>Approved cafe users and admins can sign in here.</p>
+
+                    <form id="login-form">
+
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            id="login-email"
+                            placeholder="Approved Email"
+                            required>
+
+                        <label>Access Code</label>
+                        <input
+                            type="password"
+                            id="login-access-code"
+                            placeholder="Access Code"
+                            required>
+
+                        <p id="login-status"></p>
+
+                        <button class="site-btn" type="submit">
+                            SIGN IN
+                        </button>
+
+                    </form>
+
+                    <br>
+
+                    <a href="index.html">
+                        ← Back to Home
+                    </a>
+
                 </div>
+
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/main.js"></script>
+<script src="js/jquery-3.3.1.min.js"></script>
+
+<!-- IMPORTANT -->
+<!-- <script src="js/login.js"></script> -->
+<script src="js/main.js"></script>
+
 </body>
-
 </html>

@@ -143,6 +143,7 @@
     }
 
     var cartStorageKey = 'cafeone-cart';
+    var wishlistStorageKey = 'cafeone-wishlist';
 
     function getCartItems() {
         try {
@@ -157,6 +158,21 @@
 
     function saveCartItems(items) {
         localStorage.setItem(cartStorageKey, JSON.stringify(items));
+    }
+
+    function getWishlistItems() {
+        try {
+            var storedWishlist = localStorage.getItem(wishlistStorageKey);
+            var parsedWishlist = storedWishlist ? JSON.parse(storedWishlist) : [];
+
+            return Array.isArray(parsedWishlist) ? parsedWishlist : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function saveWishlistItems(items) {
+        localStorage.setItem(wishlistStorageKey, JSON.stringify(items));
     }
 
     function formatCurrency(value) {
@@ -252,6 +268,49 @@
         $('.header__cart li a .fa-shopping-bag').next('span').text(String(totalQuantity));
         $('.humberger__menu__cart li a .fa-shopping-bag').next('span').text(String(totalQuantity));
         $('.header__cart__price span, .humberger__menu__cart .header__cart__price span').text(formatCurrency(subtotal));
+    }
+
+    function getProductId($productItem) {
+        var name = $.trim($productItem.find('.product__item__text h6').text());
+        var imageUrl = $productItem.find('.product__item__pic').data('setbg') || '';
+
+        return (name + ' ' + imageUrl).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function refreshWishlistSummary() {
+        var wishlistItems = getWishlistItems();
+        var wishlistIds = wishlistItems.map(function (item) {
+            return item.id;
+        });
+
+        $('.header__cart li a .fa-heart').next('span').text(String(wishlistItems.length));
+        $('.humberger__menu__cart li a .fa-heart').next('span').text(String(wishlistItems.length));
+
+        $('.product__item').each(function () {
+            var $productItem = $(this);
+            var isWishlisted = wishlistIds.indexOf(getProductId($productItem)) !== -1;
+            var $heart = $productItem.find('.product__item__pic__hover .fa-heart, .product__item__pic__hover .fa-heart-o');
+
+            $heart.toggleClass('fa-heart', isWishlisted).toggleClass('fa-heart-o', !isWishlisted)
+                .toggleClass('is-wishlisted', isWishlisted).attr('aria-pressed', String(isWishlisted));
+        });
+    }
+
+    function toggleWishlist($productItem) {
+        var productId = getProductId($productItem);
+        var wishlistItems = getWishlistItems();
+        var existingIndex = wishlistItems.findIndex(function (item) {
+            return item.id === productId;
+        });
+
+        if (existingIndex === -1) {
+            wishlistItems.push({ id: productId });
+        } else {
+            wishlistItems.splice(existingIndex, 1);
+        }
+
+        saveWishlistItems(wishlistItems);
+        refreshWishlistSummary();
     }
 
     function initQuantityControls(scope) {
@@ -518,6 +577,46 @@
             .toggleClass('text-success', !Boolean(isError));
     }
 
+    function updateAuthControls() {
+        if (window.location.protocol === 'file:') {
+            return;
+        }
+
+        fetch('/api/session', {
+            method: 'GET',
+            credentials: 'same-origin'
+        }).then(function (response) {
+            var $authLinks = $('.header__top__right__auth a, .humberger__menu__widget .header__top__right__auth a');
+
+            if (!response.ok) {
+                return;
+            }
+
+            return response.json().then(function (data) {
+                if (!data.authenticated) {
+                    return;
+                }
+
+                $authLinks.attr('href', '#').attr('data-auth-action', 'logout').html('<i class="fa fa-sign-out"></i> Logout');
+            });
+        }).catch(function () {
+            return null;
+        });
+    }
+
+    $(document).on('click', '[data-auth-action="logout"]', async function (event) {
+        event.preventDefault();
+
+        try {
+            await fetch('/api/logout', {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+        } finally {
+            window.location.href = './index.html';
+        }
+    });
+
     async function handleCheckoutSubmit(event) {
         event.preventDefault();
 
@@ -625,6 +724,13 @@
 
     $(document).on('click', '.product__item__pic__hover a', function (event) {
         var $icon = $(this).find('i.fa-shopping-cart');
+        var $heartIcon = $(this).find('i.fa-heart, i.fa-heart-o');
+
+        if ($heartIcon.length > 0) {
+            event.preventDefault();
+            toggleWishlist($(this).closest('.product__item'));
+            return;
+        }
 
         if ($icon.length === 0) {
             return;
@@ -898,6 +1004,7 @@
     });
 
     refreshCartSummary();
+    refreshWishlistSummary();
     renderCartPage();
     renderCheckoutPage();
 
@@ -906,6 +1013,7 @@
     }
 
     initLoginPage();
+    updateAuthControls();
     ensureApprovedAccess();
 
 })(jQuery);

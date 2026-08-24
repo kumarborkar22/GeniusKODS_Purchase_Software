@@ -271,8 +271,8 @@
     }
 
     function getProductId($productItem) {
-        var name = $.trim($productItem.find('.product__item__text h6').text());
-        var imageUrl = $productItem.find('.product__item__pic').data('setbg') || '';
+        var name = $.trim($productItem.find('.product__item__text h6, .featured__item__text h6').text());
+        var imageUrl = $productItem.find('.product__item__pic, .featured__item__pic').data('setbg') || '';
 
         return (name + ' ' + imageUrl).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     }
@@ -286,10 +286,10 @@
         $('.header__cart li a .fa-heart').next('span').text(String(wishlistItems.length));
         $('.humberger__menu__cart li a .fa-heart').next('span').text(String(wishlistItems.length));
 
-        $('.product__item').each(function () {
+        $('.product__item, .featured__item').each(function () {
             var $productItem = $(this);
             var isWishlisted = wishlistIds.indexOf(getProductId($productItem)) !== -1;
-            var $heart = $productItem.find('.product__item__pic__hover .fa-heart, .product__item__pic__hover .fa-heart-o');
+            var $heart = $productItem.find('.product__item__pic__hover .fa-heart, .product__item__pic__hover .fa-heart-o, .featured__item__pic__hover .fa-heart, .featured__item__pic__hover .fa-heart-o');
 
             $heart.toggleClass('fa-heart', isWishlisted).toggleClass('fa-heart-o', !isWishlisted)
                 .toggleClass('is-wishlisted', isWishlisted).attr('aria-pressed', String(isWishlisted));
@@ -722,7 +722,7 @@
         }
     });
 
-    $(document).on('click', '.product__item__pic__hover a', function (event) {
+    $(document).on('click', '.product__item__pic__hover a, .featured__item__pic__hover a', function (event) {
         var $icon = $(this).find('i.fa-shopping-cart');
         var $heartIcon = $(this).find('i.fa-heart, i.fa-heart-o');
 

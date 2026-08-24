@@ -728,7 +728,7 @@
 
         if ($heartIcon.length > 0) {
             event.preventDefault();
-            toggleWishlist($(this).closest('.product__item'));
+            toggleWishlist($(this).closest('.product__item, .featured__item'));
             return;
         }
 

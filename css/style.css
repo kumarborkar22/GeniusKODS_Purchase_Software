@@ -326,9 +326,13 @@ ol {
 .header__top__right__language {
 	display: none;
 	position: relative;
-	display: inline-block;
 	margin-right: 40px;
 	cursor: pointer;
+}
+
+.featured__item--search-hidden,
+.featured__item--category-hidden {
+	display: none !important;
 }
 
 .header__top__right__language:hover ul {

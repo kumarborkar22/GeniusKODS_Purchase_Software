@@ -34,27 +34,64 @@
     function filterFeaturedItems(searchTerm) {
         var normalizedTerm = $.trim(searchTerm).toLowerCase();
         var hasTerm = normalizedTerm.length > 0;
+        var visibleCount = 0;
 
         $('.featured__filter .featured__item--search-hidden').removeClass('featured__item--search-hidden');
+        $('.featured__filter .featured__item--category-hidden').removeClass('featured__item--category-hidden');
 
         if (!hasTerm) {
-            return;
+            return $('.featured__filter .featured__item').length;
         }
 
         $('.featured__filter .featured__item').each(function () {
             var itemText = $(this).find('.featured__item__text').text().toLowerCase();
+            var itemCategories = String($(this).attr('class') || '').toLowerCase();
 
-            if (itemText.indexOf(normalizedTerm) === -1) {
+            if (itemText.indexOf(normalizedTerm) === -1 && itemCategories.indexOf(normalizedTerm) === -1) {
                 $(this).closest('[class*="col-"]').addClass('featured__item--search-hidden');
+            } else {
+                visibleCount += 1;
             }
         });
+
+        return visibleCount;
+    }
+
+    function filterFeaturedByCategory(category) {
+        var normalizedCategory = String(category || 'all').toLowerCase();
+        var $featuredCards = $('.featured__filter .featured__item');
+        var visibleCount = 0;
+
+        $featuredCards.closest('[class*="col-"]').removeClass('featured__item--category-hidden');
+        $featuredCards.closest('[class*="col-"]').removeClass('featured__item--search-hidden');
+
+        if (normalizedCategory === 'all') {
+            return $featuredCards.length;
+        }
+
+        $featuredCards.each(function () {
+            var cardCategories = String($(this).closest('[class*="mix"]').attr('class') || '').toLowerCase();
+
+            if (cardCategories.indexOf(normalizedCategory) === -1) {
+                $(this).closest('[class*="col-"]').addClass('featured__item--category-hidden');
+            } else {
+                visibleCount += 1;
+            }
+        });
+
+        return visibleCount;
     }
 
     $(document).on('submit', '#hero-search-form', function (event) {
         event.preventDefault();
 
         var searchValue = $('#hero-search-input').val();
-        filterFeaturedItems(searchValue);
+        var visibleCount = filterFeaturedItems(searchValue);
+
+        if (visibleCount === 0 && $.trim(searchValue) !== '') {
+            window.location.href = './shop-grid.html?search=' + encodeURIComponent($.trim(searchValue));
+            return;
+        }
 
         $('.featured__controls li').removeClass('active');
         $('.featured__controls li[data-filter="*"]').addClass('active');
@@ -77,6 +114,27 @@
             $('#hero-search-input').val('');
             filterFeaturedItems('');
         }
+    });
+
+    $(document).on('click', '[data-filter-category]', function (event) {
+        if ($('.featured__filter').length === 0) {
+            return;
+        }
+
+        event.preventDefault();
+        $('#hero-search-input').val('');
+        filterFeaturedItems('');
+        var category = $(this).data('filter-category');
+        var visibleCount = filterFeaturedByCategory(category);
+
+        if (visibleCount === 0) {
+            window.location.href = './shop-grid.html?category=' + encodeURIComponent(category);
+            return;
+        }
+
+        $('html, body').animate({
+            scrollTop: $('.featured').offset().top - 40
+        }, 300);
     });
 
     function filterShopGridItems(searchTerm) {
@@ -140,6 +198,23 @@
                 $(this).closest('[class*="col-"]').addClass('shop-grid__item--search-hidden');
             }
         });
+    }
+
+    function initializeShopGridFilters() {
+        if ($('.product').length === 0) {
+            return;
+        }
+
+        var searchParams = new URLSearchParams(window.location.search || '');
+        var searchTerm = $.trim(searchParams.get('search') || '');
+        var category = $.trim(searchParams.get('category') || '');
+
+        if (searchTerm) {
+            $('#shop-grid-search-input').val(searchTerm);
+            filterShopGridItems(searchTerm);
+        } else if (category) {
+            filterShopGridByCategory(category);
+        }
     }
 
     var cartStorageKey = 'cafeone-cart';
@@ -1005,6 +1080,7 @@
 
     refreshCartSummary();
     refreshWishlistSummary();
+    initializeShopGridFilters();
     renderCartPage();
     renderCheckoutPage();
 

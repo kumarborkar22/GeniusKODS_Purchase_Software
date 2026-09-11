@@ -468,7 +468,7 @@
         $checkoutItems.empty();
 
         if (cartItems.length === 0) {
-            $checkoutItems.append('<li>Your cart is empty. <span>$0.00</span></li>');
+            $checkoutItems.append('<li>Your cart is empty. <span>' + formatCurrency(0) + '</span></li>');
             $('#checkout-subtotal, #checkout-total').text(formatCurrency(0));
             return;
         }
@@ -1027,13 +1027,13 @@
         max: maxPrice,
         values: [minPrice, maxPrice],
         slide: function (event, ui) {
-            minamount.val('$' + ui.values[0]);
-            maxamount.val('$' + ui.values[1]);
+            minamount.val('\u20b9' + ui.values[0]);
+            maxamount.val('\u20b9' + ui.values[1]);
         }
     });
 
-    minamount.val('$' + rangeSlider.slider("values", 0));
-    maxamount.val('$' + rangeSlider.slider("values", 1));
+    minamount.val('\u20b9' + rangeSlider.slider("values", 0));
+    maxamount.val('\u20b9' + rangeSlider.slider("values", 1));
 }
 
     /*--------------------------

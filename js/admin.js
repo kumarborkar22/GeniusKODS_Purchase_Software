@@ -2,7 +2,7 @@
     'use strict';
 
     function formatCurrency(value) {
-        return '$' + Number(value || 0).toFixed(2);
+        return '\u20b9' + Number(value || 0).toFixed(2);
     }
 
     function escapeHtml(text) {

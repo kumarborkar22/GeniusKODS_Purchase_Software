@@ -101,8 +101,14 @@ module.exports = async function handler(request, response) {
     const resendApiKey = process.env.RESEND_API_KEY;
     const orderToEmail = process.env.ORDER_TO_EMAIL;
     const orderFromEmail = process.env.ORDER_FROM_EMAIL;
+    const orderRecipients = String(orderToEmail || '')
+        .split(',')
+        .map(function (email) {
+            return email.trim();
+        })
+        .filter(Boolean);
 
-    if (!resendApiKey || !orderToEmail || !orderFromEmail) {
+    if (!resendApiKey || orderRecipients.length === 0 || !orderFromEmail) {
         return response.status(500).json({
             message: 'Email settings are missing. Set RESEND_API_KEY, ORDER_TO_EMAIL, and ORDER_FROM_EMAIL.'
         });
@@ -169,7 +175,7 @@ module.exports = async function handler(request, response) {
         },
         body: JSON.stringify({
             from: orderFromEmail,
-            to: [orderToEmail],
+            to: orderRecipients,
             subject,
             html: buildOrderEmailHtml(orderId, payload),
             text: buildOrderEmailText(orderId, payload),

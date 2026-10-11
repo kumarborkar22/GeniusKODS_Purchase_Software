@@ -652,6 +652,35 @@
             .toggleClass('text-success', !Boolean(isError));
     }
 
+    function getWhatsAppNumber(value) {
+        var digits = String(value || '').replace(/\D/g, '');
+
+        if (digits.length === 10) {
+            digits = '91' + digits;
+        }
+
+        return digits.length >= 10 && digits.length <= 15 ? digits : '';
+    }
+
+    function buildWhatsAppMessage(orderId, orderPayload) {
+        var lines = [
+            'Purchase list - Order #' + orderId,
+            'Supplier: ' + orderPayload.whatsappSupplierName,
+            ''
+        ];
+
+        orderPayload.items.forEach(function (item) {
+            var quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+            lines.push('- ' + item.name + ' x ' + quantity);
+        });
+
+        lines.push('', 'Total: ' + formatCurrency(orderPayload.total));
+        lines.push('Requested by: ' + orderPayload.customer.firstName + ' ' + orderPayload.customer.lastName);
+        lines.push('Contact: ' + orderPayload.customer.phone);
+
+        return lines.join('\n');
+    }
+
     function updateAuthControls() {
         if (window.location.protocol === 'file:') {
             return;
@@ -730,6 +759,22 @@
             return;
         }
 
+        var whatsappNumber = getWhatsAppNumber($('#checkout-whatsapp-number').val());
+
+        if (!whatsappNumber) {
+            setCheckoutStatus('Enter a valid WhatsApp number with country code.', true);
+            $('#checkout-whatsapp-number').focus();
+            return;
+        }
+
+        var whatsappSupplierName = $.trim($('#checkout-whatsapp-name').val());
+
+        if (!whatsappSupplierName) {
+            setCheckoutStatus('Enter the supplier name.', true);
+            $('#checkout-whatsapp-name').focus();
+            return;
+        }
+
         var orderTotal = cartItems.reduce(function (sum, item) {
             return sum + (Number(item.price || 0) * Math.max(1, parseInt(item.quantity, 10) || 1));
         }, 0);
@@ -750,11 +795,15 @@
             accountRequested: $('#acc').is(':checked'),
             differentAddressRequested: $('#diff-acc').is(':checked'),
             orderNotes: $.trim($('#checkout-order-notes').val() || ''),
+            whatsappSupplierName: whatsappSupplierName,
+            whatsappNumber: whatsappNumber,
             paymentMethod: 'cash-on-delivery',
             items: cartItems,
             subtotal: orderTotal,
             total: orderTotal
         };
+
+        var whatsappWindow = window.open('', '_blank');
 
         $submitButton.prop('disabled', true);
         setCheckoutStatus('Sending your order...', false);
@@ -775,10 +824,23 @@
             }
 
             clearCart();
-        $('.checkout__form form')[0].reset();
-        $('#cod').prop('checked', true);
+            $('.checkout__form form')[0].reset();
+            $('#cod').prop('checked', true);
+            var whatsappUrl = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(buildWhatsAppMessage(responseData.orderId, orderPayload));
+
+            if (whatsappWindow) {
+                whatsappWindow.location.href = whatsappUrl;
+            } else {
+                window.location.href = whatsappUrl;
+                return;
+            }
+
             setCheckoutStatus('Order placed successfully. Payment will be collected on delivery. Order #' + responseData.orderId + ' has been emailed to you.', false);
         } catch (error) {
+            if (whatsappWindow) {
+                whatsappWindow.close();
+            }
+
             setCheckoutStatus(error.message || 'Failed to place order. Please try again.', true);
         } finally {
             $submitButton.prop('disabled', false);

@@ -45,6 +45,7 @@ function buildOrderEmailHtml(orderId, payload) {
         '<p><strong>Phone:</strong> ' + escapeHtml(customer.phone) + '</p>',
         '<p><strong>Address:</strong> ' + escapeHtml(customer.address1) + (customer.address2 ? ', ' + escapeHtml(customer.address2) : '') + ', ' + escapeHtml(customer.city) + ', ' + escapeHtml(customer.state) + ', ' + escapeHtml(customer.country) + ' ' + escapeHtml(customer.zip) + '</p>',
         '<p><strong>Payment:</strong> Cash on Delivery</p>',
+        '<p><strong>WhatsApp supplier:</strong> ' + escapeHtml(payload.whatsappSupplierName) + ' (' + escapeHtml(payload.whatsappNumber) + ')</p>',
         '<p><strong>Notes:</strong> ' + escapeHtml(payload.orderNotes || 'None') + '</p>',
         '<table style="width:100%;border-collapse:collapse;margin-top:16px;">',
         '<thead>',
@@ -75,6 +76,7 @@ function buildOrderEmailText(orderId, payload) {
         'Phone: ' + (customer.phone || ''),
         'Address: ' + [customer.address1, customer.address2, customer.city, customer.state, customer.country, customer.zip].filter(Boolean).join(', '),
         'Payment: Cash on Delivery',
+        'WhatsApp supplier: ' + (payload.whatsappSupplierName || '') + ' (' + (payload.whatsappNumber || '') + ')',
         'Notes: ' + (payload.orderNotes || 'None'),
         'Items:'
     ];
@@ -159,7 +161,9 @@ module.exports = async function handler(request, response) {
         items: payload.items,
         subtotal: payload.subtotal,
         total: payload.total,
-        orderNotes: payload.orderNotes || ''
+        orderNotes: payload.orderNotes || '',
+        whatsappSupplierName: payload.whatsappSupplierName || '',
+        whatsappNumber: payload.whatsappNumber || ''
     };
 
     const storedOrders = await getJson(ORDERS_KEY, []);

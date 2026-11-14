@@ -45,7 +45,9 @@ function buildOrderEmailHtml(orderId, payload) {
         '<p><strong>Phone:</strong> ' + escapeHtml(customer.phone) + '</p>',
         '<p><strong>Address:</strong> ' + escapeHtml(customer.address1) + (customer.address2 ? ', ' + escapeHtml(customer.address2) : '') + ', ' + escapeHtml(customer.city) + ', ' + escapeHtml(customer.state) + ', ' + escapeHtml(customer.country) + ' ' + escapeHtml(customer.zip) + '</p>',
         '<p><strong>Payment:</strong> Cash on Delivery</p>',
-        '<p><strong>WhatsApp supplier:</strong> ' + escapeHtml(payload.whatsappSupplierName) + ' (' + escapeHtml(payload.whatsappNumber) + ')</p>',
+        '<p><strong>WhatsApp recipients:</strong> ' + escapeHtml((payload.whatsappRecipients || []).map(function (recipient) {
+            return recipient.name + ' (' + recipient.number + ')';
+        }).join(', ') || payload.whatsappSupplierName + ' (' + payload.whatsappNumber + ')') + '</p>',
         '<p><strong>Notes:</strong> ' + escapeHtml(payload.orderNotes || 'None') + '</p>',
         '<table style="width:100%;border-collapse:collapse;margin-top:16px;">',
         '<thead>',
@@ -76,7 +78,9 @@ function buildOrderEmailText(orderId, payload) {
         'Phone: ' + (customer.phone || ''),
         'Address: ' + [customer.address1, customer.address2, customer.city, customer.state, customer.country, customer.zip].filter(Boolean).join(', '),
         'Payment: Cash on Delivery',
-        'WhatsApp supplier: ' + (payload.whatsappSupplierName || '') + ' (' + (payload.whatsappNumber || '') + ')',
+        'WhatsApp recipients: ' + ((payload.whatsappRecipients || []).map(function (recipient) {
+            return recipient.name + ' (' + recipient.number + ')';
+        }).join(', ') || (payload.whatsappSupplierName || '') + ' (' + (payload.whatsappNumber || '') + ')'),
         'Notes: ' + (payload.orderNotes || 'None'),
         'Items:'
     ];
@@ -128,6 +132,10 @@ module.exports = async function handler(request, response) {
         return response.status(400).json({ message: 'Invalid order payload.' });
     }
 
+    if (!Array.isArray(payload.whatsappRecipients) || payload.whatsappRecipients.length === 0) {
+        return response.status(400).json({ message: 'Select at least one WhatsApp recipient.' });
+    }
+
     if (!isStoreConfigured()) {
         return response.status(500).json({ message: 'Order storage is not configured. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.' });
     }
@@ -163,7 +171,8 @@ module.exports = async function handler(request, response) {
         total: payload.total,
         orderNotes: payload.orderNotes || '',
         whatsappSupplierName: payload.whatsappSupplierName || '',
-        whatsappNumber: payload.whatsappNumber || ''
+        whatsappNumber: payload.whatsappNumber || '',
+        whatsappRecipients: Array.isArray(payload.whatsappRecipients) ? payload.whatsappRecipients : []
     };
 
     const storedOrders = await getJson(ORDERS_KEY, []);

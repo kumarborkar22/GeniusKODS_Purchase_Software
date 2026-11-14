@@ -3552,3 +3552,88 @@ ol {
 	opacity: 1;
 	transform: translateY(0);
 }
+
+.checkout-whatsapp-recipients {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.checkout-recipient-option {
+	display: flex;
+	align-items: center;
+	position: relative;
+	min-height: 58px;
+	padding: 10px 14px 10px 44px;
+	border: 1px solid #ebebeb;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.checkout-recipient-option input {
+	position: absolute;
+	visibility: hidden;
+}
+
+.checkout-recipient-option .checkmark {
+	position: absolute;
+	left: 14px;
+	top: 17px;
+	width: 22px;
+	height: 22px;
+	border: 1px solid #b2b2b2;
+	border-radius: 4px;
+}
+
+.checkout-recipient-option input:checked ~ .checkmark {
+	border-color: #7fad39;
+	background: #7fad39;
+}
+
+.checkout-recipient-option input:checked ~ .checkmark:after {
+	content: '';
+	position: absolute;
+	left: 7px;
+	top: 3px;
+	width: 7px;
+	height: 12px;
+	border: solid #ffffff;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.checkout-recipient-option span:last-child {
+	display: flex;
+	flex-direction: column;
+}
+
+.checkout-recipient-option small,
+.checkout-recipient-section > small {
+	color: #6f6f6f;
+}
+
+.checkout-add-recipient {
+	margin-bottom: 16px;
+	padding: 8px 14px;
+	font-size: 12px;
+}
+
+.checkout-new-recipient {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.checkout-new-recipient input {
+	width: 100%;
+	height: 46px;
+	padding: 0 20px;
+	border: 1px solid #ebebeb;
+	border-radius: 4px;
+}
+
+.checkout-new-recipient .site-btn {
+	justify-self: start;
+	padding: 8px 14px;
+	font-size: 12px;
+}

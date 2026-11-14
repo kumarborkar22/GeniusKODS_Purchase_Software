@@ -279,13 +279,16 @@
                                 <input type="text" id="checkout-order-notes"
                                     placeholder="Notes about your order, e.g. special notes for delivery.">
                             </div>
-                            <div class="checkout__input">
-                                <p>Supplier name<span>*</span></p>
-                                <input type="text" id="checkout-whatsapp-name" placeholder="e.g. Vegetable supplier" required>
-                            </div>
-                            <div class="checkout__input">
-                                <p>Supplier WhatsApp number<span>*</span></p>
-                                <input type="tel" id="checkout-whatsapp-number" placeholder="e.g. +91 98765 43210" required>
+                            <div class="checkout__input checkout-recipient-section">
+                                <p>Send purchase list to<span>*</span></p>
+                                <div id="checkout-whatsapp-recipients" class="checkout-whatsapp-recipients"></div>
+                                <button type="button" id="checkout-add-recipient" class="site-btn checkout-add-recipient">ADD RECIPIENT</button>
+                                <div id="checkout-new-recipient" class="checkout-new-recipient" hidden>
+                                    <input type="text" id="checkout-new-recipient-name" placeholder="Name, e.g. XYZ">
+                                    <input type="tel" id="checkout-new-recipient-number" placeholder="WhatsApp number, e.g. +91 98765 43210">
+                                    <button type="button" id="checkout-save-recipient" class="site-btn">SAVE RECIPIENT</button>
+                                </div>
+                                <small>Select one or more recipients. The purchase list will open in each selected WhatsApp chat.</small>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">

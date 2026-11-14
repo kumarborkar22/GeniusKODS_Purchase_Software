@@ -219,6 +219,10 @@
 
     var cartStorageKey = 'cafeone-cart';
     var wishlistStorageKey = 'cafeone-wishlist';
+    var whatsappRecipientsStorageKey = 'cafeone-whatsapp-recipients';
+    var defaultWhatsAppRecipients = [
+        { id: 'kumar-9021340206', name: 'Kumar', number: '9021340206' }
+    ];
 
     function getCartItems() {
         try {
@@ -248,6 +252,59 @@
 
     function saveWishlistItems(items) {
         localStorage.setItem(wishlistStorageKey, JSON.stringify(items));
+    }
+
+    function getWhatsAppRecipients() {
+        try {
+            var storedRecipients = localStorage.getItem(whatsappRecipientsStorageKey);
+            var parsedRecipients = storedRecipients ? JSON.parse(storedRecipients) : defaultWhatsAppRecipients;
+
+            return Array.isArray(parsedRecipients) ? parsedRecipients : defaultWhatsAppRecipients;
+        } catch (error) {
+            return defaultWhatsAppRecipients;
+        }
+    }
+
+    function saveWhatsAppRecipients(recipients) {
+        localStorage.setItem(whatsappRecipientsStorageKey, JSON.stringify(recipients));
+    }
+
+    function renderWhatsAppRecipients() {
+        var $recipients = $('#checkout-whatsapp-recipients');
+
+        if ($recipients.length === 0) {
+            return;
+        }
+
+        $recipients.empty();
+        getWhatsAppRecipients().forEach(function (recipient) {
+            var inputId = 'checkout-recipient-' + recipient.id;
+            var $label = $('<label class="checkout-recipient-option" for="' + inputId + '">' +
+                '<input type="checkbox" id="' + inputId + '" name="checkout-whatsapp-recipient" value="' + escapeHtml(recipient.id) + '">' +
+                '<span class="checkmark"></span>' +
+                '<span><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipient.number) + '</small></span>' +
+                '</label>');
+
+            $recipients.append($label);
+        });
+    }
+
+    function getSelectedWhatsAppRecipients() {
+        var recipients = getWhatsAppRecipients();
+        var selectedIds = $('#checkout-whatsapp-recipients input:checked').map(function () {
+            return $(this).val();
+        }).get();
+
+        return recipients.filter(function (recipient) {
+            return selectedIds.indexOf(recipient.id) !== -1;
+        }).map(function (recipient) {
+            return {
+                name: recipient.name,
+                number: getWhatsAppNumber(recipient.number)
+            };
+        }).filter(function (recipient) {
+            return recipient.number;
+        });
     }
 
     function formatCurrency(value) {
@@ -720,7 +777,9 @@
     function buildWhatsAppMessage(orderId, orderPayload) {
         var lines = [
             'Purchase list - Order #' + orderId,
-            'Supplier: ' + orderPayload.whatsappSupplierName,
+            'Shared with: ' + orderPayload.whatsappRecipients.map(function (recipient) {
+                return recipient.name;
+            }).join(', '),
             ''
         ];
 
@@ -814,19 +873,10 @@
             return;
         }
 
-        var whatsappNumber = getWhatsAppNumber($('#checkout-whatsapp-number').val());
+        var whatsappRecipients = getSelectedWhatsAppRecipients();
 
-        if (!whatsappNumber) {
-            setCheckoutStatus('Enter a valid WhatsApp number with country code.', true);
-            $('#checkout-whatsapp-number').focus();
-            return;
-        }
-
-        var whatsappSupplierName = $.trim($('#checkout-whatsapp-name').val());
-
-        if (!whatsappSupplierName) {
-            setCheckoutStatus('Enter the supplier name.', true);
-            $('#checkout-whatsapp-name').focus();
+        if (whatsappRecipients.length === 0) {
+            setCheckoutStatus('Select at least one WhatsApp recipient.', true);
             return;
         }
 
@@ -850,15 +900,18 @@
             accountRequested: $('#acc').is(':checked'),
             differentAddressRequested: $('#diff-acc').is(':checked'),
             orderNotes: $.trim($('#checkout-order-notes').val() || ''),
-            whatsappSupplierName: whatsappSupplierName,
-            whatsappNumber: whatsappNumber,
+            whatsappRecipients: whatsappRecipients,
+            whatsappSupplierName: whatsappRecipients[0].name,
+            whatsappNumber: whatsappRecipients[0].number,
             paymentMethod: 'cash-on-delivery',
             items: cartItems,
             subtotal: orderTotal,
             total: orderTotal
         };
 
-        var whatsappWindow = window.open('', '_blank');
+        var whatsappWindows = whatsappRecipients.map(function () {
+            return window.open('', '_blank');
+        });
 
         $submitButton.prop('disabled', true);
         setCheckoutStatus('Sending your order...', false);
@@ -881,20 +934,31 @@
             clearCart();
             $('.checkout__form form')[0].reset();
             $('#cod').prop('checked', true);
-            var whatsappUrl = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(buildWhatsAppMessage(responseData.orderId, orderPayload));
+            var message = encodeURIComponent(buildWhatsAppMessage(responseData.orderId, orderPayload));
+            var openedWhatsAppWindow = false;
 
-            if (whatsappWindow) {
-                whatsappWindow.location.href = whatsappUrl;
-            } else {
-                window.location.href = whatsappUrl;
+            whatsappRecipients.forEach(function (recipient, index) {
+                var whatsappUrl = 'https://wa.me/' + recipient.number + '?text=' + message;
+                var whatsappWindow = whatsappWindows[index];
+
+                if (whatsappWindow) {
+                    whatsappWindow.location.href = whatsappUrl;
+                    openedWhatsAppWindow = true;
+                }
+            });
+
+            if (!openedWhatsAppWindow) {
+                window.location.href = 'https://wa.me/' + whatsappRecipients[0].number + '?text=' + message;
                 return;
             }
 
-            setCheckoutStatus('Order placed successfully. Payment will be collected on delivery. Order #' + responseData.orderId + ' has been emailed to you.', false);
+            setCheckoutStatus('Order placed successfully. The purchase list was prepared for ' + whatsappRecipients.length + ' WhatsApp recipient(s). Order #' + responseData.orderId + ' has been emailed to you.', false);
         } catch (error) {
-            if (whatsappWindow) {
-                whatsappWindow.close();
-            }
+            whatsappWindows.forEach(function (whatsappWindow) {
+                if (whatsappWindow) {
+                    whatsappWindow.close();
+                }
+            });
 
             setCheckoutStatus(error.message || 'Failed to place order. Please try again.', true);
         } finally {
@@ -975,6 +1039,42 @@
     });
 
     $(document).on('submit', '#checkout-form', handleCheckoutSubmit);
+
+    $(document).on('click', '#checkout-add-recipient', function () {
+        $('#checkout-new-recipient').prop('hidden', false);
+        $('#checkout-new-recipient-name').focus();
+    });
+
+    $(document).on('click', '#checkout-save-recipient', function () {
+        var name = $.trim($('#checkout-new-recipient-name').val());
+        var number = getWhatsAppNumber($('#checkout-new-recipient-number').val());
+
+        if (!name || !number) {
+            setCheckoutStatus('Enter a name and a valid WhatsApp number for the recipient.', true);
+            return;
+        }
+
+        var recipients = getWhatsAppRecipients();
+        var existingRecipient = recipients.find(function (recipient) {
+            return recipient.number === number || recipient.name.toLowerCase() === name.toLowerCase();
+        });
+
+        if (existingRecipient) {
+            setCheckoutStatus('This recipient name or number already exists.', true);
+            return;
+        }
+
+        recipients.push({
+            id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + number,
+            name: name,
+            number: number
+        });
+        saveWhatsAppRecipients(recipients);
+        renderWhatsAppRecipients();
+        $('#checkout-new-recipient').prop('hidden', true);
+        $('#checkout-new-recipient-name, #checkout-new-recipient-number').val('');
+        setCheckoutStatus('Recipient added. Select the recipient to share the purchase list.', false);
+    });
 
     /*------------------
         Background Set
@@ -1200,6 +1300,7 @@
     initializeShopGridFilters();
     renderCartPage();
     renderCheckoutPage();
+    renderWhatsAppRecipients();
 
     if ($('#checkout-form').length > 0) {
         setCheckoutStatus('', false);

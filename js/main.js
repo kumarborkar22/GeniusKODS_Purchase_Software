@@ -274,8 +274,20 @@
 
     function createCartItemFromProduct($productItem) {
         var name = $.trim($productItem.find('.product__item__text h6').text());
+        if (!name) {
+            name = $.trim($productItem.find('.featured__item__text h6').text());
+        }
+
         var priceText = $.trim($productItem.find('.product__item__text h5').text());
+        if (!priceText) {
+            priceText = $.trim($productItem.find('.featured__item__text h5').text());
+        }
+
         var imageUrl = $productItem.find('.product__item__pic').data('setbg') || '';
+        if (!imageUrl) {
+            imageUrl = $productItem.find('.featured__item__pic').data('setbg') || '';
+        }
+
         var slugSource = name + ' ' + imageUrl;
 
         return {
@@ -292,15 +304,19 @@
         var existingItem = cartItems.find(function (item) {
             return item.id === product.id;
         });
+        var quantity;
 
         if (existingItem) {
             existingItem.quantity = Number(existingItem.quantity || 0) + 1;
+            quantity = existingItem.quantity;
         } else {
             cartItems.push(product);
+            quantity = product.quantity;
         }
 
         saveCartItems(cartItems);
         refreshCartSummary();
+        showCartNotification(product.name, quantity);
     }
 
     function removeCartItem(itemId) {
@@ -343,6 +359,45 @@
         $('.header__cart li a .fa-shopping-bag').next('span').text(String(totalQuantity));
         $('.humberger__menu__cart li a .fa-shopping-bag').next('span').text(String(totalQuantity));
         $('.header__cart__price span, .humberger__menu__cart .header__cart__price span').text(formatCurrency(subtotal));
+
+        $('.product__item, .featured__item').each(function () {
+            var $productItem = $(this);
+            var productId = createCartItemFromProduct($productItem).id;
+            var cartItem = cartItems.find(function (item) {
+                return item.id === productId;
+            });
+            var quantity = cartItem ? Math.max(1, parseInt(cartItem.quantity, 10) || 1) : 0;
+            var $cartLink = $productItem.find('.product__item__pic__hover a, .featured__item__pic__hover a').filter(function () {
+                return $(this).find('i.fa-shopping-cart').length > 0;
+            });
+            var $badge = $cartLink.find('.cart-quantity-badge');
+
+            if ($badge.length === 0) {
+                $badge = $('<span class="cart-quantity-badge" aria-hidden="true"></span>');
+                $cartLink.append($badge);
+            }
+
+            $badge.text(String(quantity)).toggle(quantity > 0);
+            $cartLink.attr('aria-label', quantity > 0 ? 'Add to cart. Currently ' + quantity + ' in cart.' : 'Add to cart');
+        });
+    }
+
+    function showCartNotification(productName, quantity) {
+        var $notification = $('#cart-notification');
+
+        if ($notification.length === 0) {
+            $notification = $('<div id="cart-notification" class="cart-notification" role="status" aria-live="polite"></div>');
+            $('body').append($notification);
+        }
+
+        $notification.stop(true, true)
+            .text('Added 1 \u00d7 ' + productName + '. Cart quantity: ' + quantity + '.')
+            .addClass('is-visible');
+
+        window.clearTimeout($notification.data('hide-timeout'));
+        $notification.data('hide-timeout', window.setTimeout(function () {
+            $notification.removeClass('is-visible');
+        }, 2500));
     }
 
     function getProductId($productItem) {

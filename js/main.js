@@ -222,7 +222,8 @@
     var whatsappRecipientsStorageKey = 'cafeone-whatsapp-recipients';
     var defaultWhatsAppRecipients = [
         { id: 'kumar-9021340206', name: 'Kumar', number: '9021340206' },
-        { id: 'tj-8007999372', name: 'Tejas', number: '8007999372' }
+        { id: 'tj-8007999372', name: 'Tejas', number: '8007999372' },
+        { id: 'manas-9834607452', name: 'Manas', number: '9834607452' }
     ];
 
     function getCartItems() {

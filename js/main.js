@@ -764,6 +764,28 @@
             .toggleClass('text-success', !Boolean(isError));
     }
 
+    function renderWhatsAppLinks(orderId, orderPayload) {
+        var $links = $('#checkout-whatsapp-links');
+
+        if ($links.length === 0) {
+            return;
+        }
+
+        var message = encodeURIComponent(buildWhatsAppMessage(orderId, orderPayload));
+        $links.empty().append('<p>Open each selected WhatsApp chat and press Send:</p>');
+
+        orderPayload.whatsappRecipients.forEach(function (recipient) {
+            var whatsappUrl = 'https://wa.me/' + recipient.number + '?text=' + message;
+            $links.append(
+                '<a class="checkout-whatsapp-link" href="' + whatsappUrl + '" target="_blank" rel="noopener">' +
+                    'Open WhatsApp for ' + escapeHtml(recipient.name) +
+                '</a>'
+            );
+        });
+
+        $links.prop('hidden', false);
+    }
+
     function getWhatsAppNumber(value) {
         var digits = String(value || '').replace(/\D/g, '');
 
@@ -909,11 +931,10 @@
             total: orderTotal
         };
 
-        var whatsappWindows = whatsappRecipients.map(function () {
-            return window.open('', '_blank');
-        });
+        var whatsappWindow = window.open('', '_blank');
 
         $submitButton.prop('disabled', true);
+        $('#checkout-whatsapp-links').prop('hidden', true).empty();
         setCheckoutStatus('Sending your order...', false);
 
         try {
@@ -935,30 +956,18 @@
             $('.checkout__form form')[0].reset();
             $('#cod').prop('checked', true);
             var message = encodeURIComponent(buildWhatsAppMessage(responseData.orderId, orderPayload));
-            var openedWhatsAppWindow = false;
+            var firstWhatsAppUrl = 'https://wa.me/' + whatsappRecipients[0].number + '?text=' + message;
 
-            whatsappRecipients.forEach(function (recipient, index) {
-                var whatsappUrl = 'https://wa.me/' + recipient.number + '?text=' + message;
-                var whatsappWindow = whatsappWindows[index];
-
-                if (whatsappWindow) {
-                    whatsappWindow.location.href = whatsappUrl;
-                    openedWhatsAppWindow = true;
-                }
-            });
-
-            if (!openedWhatsAppWindow) {
-                window.location.href = 'https://wa.me/' + whatsappRecipients[0].number + '?text=' + message;
-                return;
+            if (whatsappWindow) {
+                whatsappWindow.location.href = firstWhatsAppUrl;
             }
 
             setCheckoutStatus('Order placed successfully. The purchase list was prepared for ' + whatsappRecipients.length + ' WhatsApp recipient(s). Order #' + responseData.orderId + ' has been emailed to you.', false);
+            renderWhatsAppLinks(responseData.orderId, orderPayload);
         } catch (error) {
-            whatsappWindows.forEach(function (whatsappWindow) {
-                if (whatsappWindow) {
-                    whatsappWindow.close();
-                }
-            });
+            if (whatsappWindow) {
+                whatsappWindow.close();
+            }
 
             setCheckoutStatus(error.message || 'Failed to place order. Please try again.', true);
         } finally {

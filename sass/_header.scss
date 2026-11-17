@@ -176,7 +176,7 @@
         li {
             list-style: none;
             display: inline-block;
-            margin-right: 50px;
+            margin-right: 26px;
             position: relative;
 
             .header__menu__dropdown {
@@ -208,6 +208,7 @@
                         font-weight: 400;
                         padding: 5px 15px;
                     }
+
                 }
             }
 
@@ -246,6 +247,8 @@
                 display: block;
             }
         }
+
+        white-space: nowrap;
     }
 }
 

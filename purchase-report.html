@@ -335,7 +335,8 @@
                         <form id="purchase-form" class="report-form">
                             <div class="report-form__field">
                                 <label for="purchase-item">Item</label>
-                                <input id="purchase-item" type="text" placeholder="e.g. Tomato" required>
+                                <input id="purchase-item" list="purchase-item-options" type="text" placeholder="e.g. Tomato" required>
+                                <datalist id="purchase-item-options"></datalist>
                             </div>
                             <div class="report-form__field">
                                 <label for="purchase-quantity">Quantity</label>

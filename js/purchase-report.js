@@ -14,6 +14,12 @@
         { id: 'tomato-2026-10-04', date: '2026-10-04', item: 'Tomato', quantity: 21, unit: 'kg', price: 44 },
         { id: 'tomato-2026-11-03', date: '2026-11-03', item: 'Tomato', quantity: 16, unit: 'kg', price: 52 }
     ];
+    var purchaseItems = [
+        'Tomato', 'Potato', 'Onion', 'Capsicum', 'Lettuce', 'Cabbage', 'Cucumber',
+        'Carrot', 'Beetroot', 'Mushroom', 'Paneer', 'Sweet Corn', 'Garlic',
+        'Ginger', 'Coriander', 'Mint', 'Lemon', 'Banana', 'Apple', 'Orange',
+        'Oil', 'Mayo', 'Bread', 'Burger Patty', 'Momos'
+    ];
 
     function formatCurrency(value) {
         return '\u20b9' + Number(value || 0).toFixed(2);
@@ -80,17 +86,33 @@
     function renderItemOptions(purchases) {
         var itemSelect = document.getElementById('report-item');
         var current = itemSelect.value;
-        var items = purchases.map(function (purchase) {
+        var items = purchaseItems.concat(purchases.map(function (purchase) {
             return purchase.item;
-        }).filter(function (item, index, list) {
+        })).filter(function (item, index, list) {
             return item && list.indexOf(item) === index;
         }).sort();
-        itemSelect.innerHTML = items.map(function (item) {
+        itemSelect.innerHTML = '<option value="all">All items</option>' + items.map(function (item) {
             return '<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>';
         }).join('');
         if (items.indexOf(current) !== -1) {
             itemSelect.value = current;
+        } else {
+            itemSelect.value = 'all';
         }
+        document.getElementById('purchase-item-options').innerHTML = items.map(function (item) {
+            return '<option value="' + escapeHtml(item) + '"></option>';
+        }).join('');
+    }
+
+    function getSelectedItem() {
+        return document.getElementById('report-item').value || 'all';
+    }
+
+    function getVisiblePurchases(purchases, month) {
+        var selectedItem = getSelectedItem();
+        return getPurchasesForMonth(purchases, month).filter(function (purchase) {
+            return selectedItem === 'all' || purchase.item === selectedItem;
+        });
     }
 
     function renderSummary(monthPurchases) {
@@ -101,16 +123,20 @@
             return total + Number(purchase.quantity || 0) * Number(purchase.price || 0);
         }, 0);
         var average = quantity ? spent / quantity : 0;
-        document.getElementById('report-quantity').textContent = quantity.toFixed(2).replace(/\.00$/, '') + ' ' +
-            (monthPurchases[0] ? monthPurchases[0].unit : 'kg');
+        var units = monthPurchases.map(function (purchase) {
+            return purchase.unit;
+        }).filter(function (unit, index, list) {
+            return list.indexOf(unit) === index;
+        });
+        var unitLabel = units.length === 1 ? units[0] : 'mixed units';
+        document.getElementById('report-quantity').textContent = quantity.toFixed(2).replace(/\.00$/, '') + ' ' + unitLabel;
         document.getElementById('report-spent').textContent = formatCurrency(spent);
-        document.getElementById('report-average').textContent = formatCurrency(average) + '/' +
-            (monthPurchases[0] ? monthPurchases[0].unit : 'kg');
+        document.getElementById('report-average').textContent = formatCurrency(average) + '/' + unitLabel;
         document.getElementById('report-entries').textContent = String(monthPurchases.length);
     }
 
     function renderChart(purchases) {
-        var item = document.getElementById('report-item').value;
+        var item = getSelectedItem();
         var chart = document.getElementById('report-chart');
         var months = [];
         for (var offset = 5; offset >= 0; offset -= 1) {
@@ -119,13 +145,13 @@
         }
         var values = months.map(function (month) {
             return purchases.filter(function (purchase) {
-                return purchase.item === item && String(purchase.date).slice(0, 7) === month;
+                return (item === 'all' || purchase.item === item) && String(purchase.date).slice(0, 7) === month;
             }).reduce(function (total, purchase) {
                 return total + Number(purchase.quantity || 0);
             }, 0);
         });
         var maximum = Math.max.apply(Math, values.concat([1]));
-        document.getElementById('report-chart-title').textContent = item + ' quantity by month';
+        document.getElementById('report-chart-title').textContent = (item === 'all' ? 'All items' : item) + ' quantity by month';
         chart.innerHTML = months.map(function (month, index) {
             var height = Math.max(4, Math.round((values[index] / maximum) * 160));
             return '<div class="report-chart__column">' +
@@ -138,7 +164,7 @@
 
     function renderTable(purchases) {
         var selectedMonth = getSelectedMonth();
-        var monthPurchases = getPurchasesForMonth(purchases, selectedMonth);
+        var monthPurchases = getVisiblePurchases(purchases, selectedMonth);
         var body = document.getElementById('report-table-body');
         document.getElementById('report-table-title').textContent = 'Purchases in ' + monthLabel(selectedMonth);
         renderSummary(monthPurchases);
@@ -166,7 +192,9 @@
     document.getElementById('purchase-date').value = currentMonth + '-01';
     document.getElementById('report-month').addEventListener('change', render);
     document.getElementById('report-item').addEventListener('change', function () {
-        renderChart(readPurchases());
+        var purchases = readPurchases();
+        renderTable(purchases);
+        renderChart(purchases);
     });
     document.getElementById('purchase-form').addEventListener('submit', function (event) {
         event.preventDefault();

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Cafe One monthly purchase report">
+    <meta name="keywords" content="Cafe One, purchase report, monthly purchases, inventory">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>CafeOne | Purchase Report</title>
+
+    <link rel="icon" type="image/png" href="img/cafeone logo.jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <style>
+        :root {
+            --report-bg: #f5f2ea;
+            --report-text: #1f2d23;
+            --report-muted: #718078;
+            --report-green: #7f9c5b;
+            --report-gold: #d8a84e;
+            --report-border: rgba(31, 45, 35, 0.1);
+        }
+
+        body {
+            background: radial-gradient(circle at top left, #fff 0%, var(--report-bg) 58%, #eef4e8 100%);
+            color: var(--report-text);
+        }
+
+        .report-shell {
+            min-height: 100vh;
+            padding: 36px 0 64px;
+        }
+
+        .report-header,
+        .report-toolbar,
+        .report-card__heading,
+        .report-form__actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .report-header {
+            margin-bottom: 28px;
+        }
+
+        .report-header h1 {
+            margin: 0 0 4px;
+            font-size: 34px;
+            font-weight: 900;
+        }
+
+        .report-header p,
+        .report-note,
+        .report-card__heading p {
+            margin: 0;
+            color: var(--report-muted);
+        }
+
+        .report-card {
+            background: #fff;
+            border: 1px solid var(--report-border);
+            border-radius: 22px;
+            box-shadow: 0 16px 42px rgba(31, 45, 35, 0.07);
+            padding: 24px;
+        }
+
+        .report-toolbar {
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .report-select {
+            min-width: 180px;
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid var(--report-border);
+            border-radius: 8px;
+            color: var(--report-text);
+            background: #fff;
+        }
+
+        .report-toolbar__control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-toolbar__control label,
+        .report-form label {
+            margin: 0;
+            color: var(--report-muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .report-stat {
+            padding: 20px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fff 0%, #fbf7ef 100%);
+            border: 1px solid var(--report-border);
+        }
+
+        .report-stat span {
+            display: block;
+            margin-bottom: 9px;
+            color: var(--report-muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .report-stat strong {
+            font-size: 28px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+
+        .report-card__heading {
+            margin-bottom: 20px;
+        }
+
+        .report-card__heading h3 {
+            margin: 0 0 3px;
+            font-size: 21px;
+            font-weight: 900;
+        }
+
+        .report-chart {
+            display: flex;
+            align-items: end;
+            gap: 10px;
+            min-height: 220px;
+            padding: 20px 8px 0;
+            border-bottom: 1px solid var(--report-border);
+        }
+
+        .report-chart__column {
+            display: flex;
+            flex: 1;
+            height: 190px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: end;
+            gap: 7px;
+        }
+
+        .report-chart__bar {
+            width: min(42px, 80%);
+            min-height: 4px;
+            border-radius: 8px 8px 0 0;
+            background: linear-gradient(180deg, var(--report-green), #a8bb87);
+            transition: height .2s ease;
+        }
+
+        .report-chart__value,
+        .report-chart__label {
+            color: var(--report-muted);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .report-chart__label {
+            margin-top: 5px;
+            font-weight: 700;
+        }
+
+        .report-form {
+            display: grid;
+            grid-template-columns: 1.3fr .8fr .8fr .8fr;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .report-form__field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .report-form input,
+        .report-form select {
+            width: 100%;
+            height: 42px;
+            padding: 0 11px;
+            border: 1px solid var(--report-border);
+            border-radius: 7px;
+            background: #fff;
+        }
+
+        .report-form__actions {
+            justify-content: flex-end;
+            grid-column: 1 / -1;
+        }
+
+        .report-table-wrap {
+            overflow-x: auto;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .report-table th,
+        .report-table td {
+            padding: 13px 10px;
+            border-bottom: 1px solid var(--report-border);
+            text-align: left;
+        }
+
+        .report-table th {
+            color: var(--report-muted);
+            font-size: 12px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .report-table td:last-child,
+        .report-table th:last-child {
+            text-align: right;
+        }
+
+        .report-delete {
+            padding: 0;
+            border: 0;
+            background: none;
+            color: #b05b55;
+            font-size: 12px;
+        }
+
+        .report-empty {
+            padding: 26px 10px !important;
+            color: var(--report-muted);
+            text-align: center !important;
+        }
+
+        @media (max-width: 991px) {
+            .report-stats,
+            .report-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .report-form {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .report-header,
+            .report-toolbar,
+            .report-card__heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .report-stats,
+            .report-grid,
+            .report-form {
+                grid-template-columns: 1fr;
+            }
+
+            .report-toolbar__control {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="report-shell">
+        <div class="container">
+            <header class="report-header">
+                <div>
+                    <h1>Monthly Purchase Report</h1>
+                    <p>Track quantity, average price, and spend so your next purchase budget is easier to plan.</p>
+                </div>
+                <a href="./index.html" class="primary-btn">Back to Shop</a>
+            </header>
+
+            <section class="report-card">
+                <div class="report-toolbar">
+                    <div class="report-toolbar__control">
+                        <label for="report-month">Month</label>
+                        <select id="report-month" class="report-select"></select>
+                    </div>
+                    <div class="report-toolbar__control">
+                        <label for="report-item">Item trend</label>
+                        <select id="report-item" class="report-select"></select>
+                    </div>
+                </div>
+
+                <div class="report-stats">
+                    <div class="report-stat"><span>Total quantity</span><strong id="report-quantity">0 kg</strong></div>
+                    <div class="report-stat"><span>Total spent</span><strong id="report-spent">₹0.00</strong></div>
+                    <div class="report-stat"><span>Average price</span><strong id="report-average">₹0.00/kg</strong></div>
+                    <div class="report-stat"><span>Purchase entries</span><strong id="report-entries">0</strong></div>
+                </div>
+
+                <div class="report-grid">
+                    <div class="report-card">
+                        <div class="report-card__heading">
+                            <div>
+                                <h3 id="report-chart-title">Tomato quantity by month</h3>
+                                <p>Use this trend to set next month's quantity target.</p>
+                            </div>
+                        </div>
+                        <div id="report-chart" class="report-chart" aria-label="Monthly quantity chart"></div>
+                    </div>
+                    <div class="report-card">
+                        <div class="report-card__heading">
+                            <div>
+                                <h3>Add purchase</h3>
+                                <p>Save each purchase at its actual daily price.</p>
+                            </div>
+                        </div>
+                        <form id="purchase-form" class="report-form">
+                            <div class="report-form__field">
+                                <label for="purchase-item">Item</label>
+                                <input id="purchase-item" type="text" placeholder="e.g. Tomato" required>
+                            </div>
+                            <div class="report-form__field">
+                                <label for="purchase-quantity">Quantity</label>
+                                <input id="purchase-quantity" type="number" min="0.01" step="0.01" placeholder="10" required>
+                            </div>
+                            <div class="report-form__field">
+                                <label for="purchase-unit">Unit</label>
+                                <select id="purchase-unit">
+                                    <option value="kg">kg</option>
+                                    <option value="L">L</option>
+                                    <option value="pcs">pcs</option>
+                                    <option value="pack">pack</option>
+                                </select>
+                            </div>
+                            <div class="report-form__field">
+                                <label for="purchase-price">Price / unit (₹)</label>
+                                <input id="purchase-price" type="number" min="0" step="0.01" placeholder="40" required>
+                            </div>
+                            <div class="report-form__field">
+                                <label for="purchase-date">Date</label>
+                                <input id="purchase-date" type="date" required>
+                            </div>
+                            <div class="report-form__actions">
+                                <button class="site-btn" type="submit">Add purchase</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="report-card__heading">
+                    <div>
+                        <h3 id="report-table-title">Purchases in November 2026</h3>
+                        <p class="report-note">Entries are saved in this browser. The backend can be connected later for shared staff reporting.</p>
+                    </div>
+                </div>
+                <div class="report-table-wrap">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Price / unit</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/purchase-report.js"></script>
+</body>
+
+</html>

@@ -51,6 +51,45 @@
         localStorage.setItem(storageKey, JSON.stringify(purchases));
     }
 
+    function setDataStatus(message) {
+        document.getElementById('report-data-status').textContent = message;
+    }
+
+    async function loadOnlinePurchases() {
+        if (window.location.protocol === 'file:') {
+            setDataStatus('Showing browser-saved data. Open the deployed site to load submitted orders.');
+            return;
+        }
+
+        try {
+            var response = await fetch('/api/purchases', {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
+            var responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Unable to load online purchase data.');
+            }
+
+            var onlinePurchases = Array.isArray(responseData.purchases) ? responseData.purchases : [];
+            var storedPurchases = readPurchases();
+            var localPurchases = storedPurchases.filter(function (purchase) {
+                return String(purchase.id || '').indexOf('tomato-2026-') !== 0 &&
+                    String(purchase.id || '').indexOf('order-') !== 0;
+            });
+
+            savePurchases(localPurchases.concat(onlinePurchases));
+            render();
+            setDataStatus(onlinePurchases.length
+                ? 'Showing submitted orders and browser-saved entries.'
+                : 'No submitted orders found yet. Add a purchase entry below.');
+        } catch (error) {
+            setDataStatus((error.message || 'Unable to load online purchase data.') +
+                ' Showing browser-saved entries instead.');
+        }
+    }
+
     function monthLabel(month) {
         var parts = month.split('-');
         return monthNames[Number(parts[1]) - 1] + ' ' + parts[0];
@@ -227,4 +266,5 @@
     });
 
     render();
+    loadOnlinePurchases();
 }());

@@ -84,6 +84,16 @@
             background: #fff;
         }
 
+        .report-search {
+            width: 220px;
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid var(--report-border);
+            border-radius: 8px;
+            color: var(--report-text);
+            background: #fff;
+        }
+
         .report-toolbar__control {
             display: flex;
             align-items: center;
@@ -182,6 +192,45 @@
             font-weight: 700;
         }
 
+        .report-insights {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            min-height: 220px;
+        }
+
+        .report-pie {
+            width: 166px;
+            height: 166px;
+            flex: 0 0 166px;
+            border-radius: 50%;
+            background: #e8eee0;
+            box-shadow: inset 0 0 0 1px rgba(31, 45, 35, .08);
+        }
+
+        .report-pie__legend {
+            display: flex;
+            max-width: 180px;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .report-pie__legend__item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--report-muted);
+            font-size: 12px;
+        }
+
+        .report-pie__legend__swatch {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 10px;
+            border-radius: 50%;
+        }
+
         .report-form {
             display: grid;
             grid-template-columns: 1.3fr .8fr .8fr .8fr;
@@ -277,9 +326,18 @@
                 grid-template-columns: 1fr;
             }
 
+            .report-search {
+                width: 100%;
+            }
+
             .report-toolbar__control {
                 width: 100%;
                 justify-content: space-between;
+            }
+
+            .report-insights {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
@@ -304,7 +362,9 @@
                     </div>
                     <div class="report-toolbar__control">
                         <label for="report-item">Item trend</label>
-                        <select id="report-item" class="report-select"></select>
+                        <input id="report-item" class="report-search" list="report-item-options"
+                            placeholder="Search an item..." autocomplete="off">
+                        <datalist id="report-item-options"></datalist>
                     </div>
                 </div>
 
@@ -316,7 +376,7 @@
                 </div>
 
                 <div class="report-grid">
-                    <div class="report-card">
+                    <div class="report-card report-card--chart">
                         <div class="report-card__heading">
                             <div>
                                 <h3 id="report-chart-title">Tomato quantity by month</h3>
@@ -325,51 +385,24 @@
                         </div>
                         <div id="report-chart" class="report-chart" aria-label="Monthly quantity chart"></div>
                     </div>
-                    <div class="report-card">
+                    <div class="report-card report-card--insights">
                         <div class="report-card__heading">
                             <div>
-                                <h3>Add purchase</h3>
-                                <p>Save each purchase at its actual daily price.</p>
+                                <h3>Monthly spending mix</h3>
+                                <p>See which items used the most of this month's budget.</p>
                             </div>
                         </div>
-                        <form id="purchase-form" class="report-form">
-                            <div class="report-form__field">
-                                <label for="purchase-item">Item</label>
-                                <input id="purchase-item" list="purchase-item-options" type="text" placeholder="e.g. Tomato" required>
-                                <datalist id="purchase-item-options"></datalist>
-                            </div>
-                            <div class="report-form__field">
-                                <label for="purchase-quantity">Quantity</label>
-                                <input id="purchase-quantity" type="number" min="0.01" step="0.01" placeholder="10" required>
-                            </div>
-                            <div class="report-form__field">
-                                <label for="purchase-unit">Unit</label>
-                                <select id="purchase-unit">
-                                    <option value="kg">kg</option>
-                                    <option value="L">L</option>
-                                    <option value="pcs">pcs</option>
-                                    <option value="pack">pack</option>
-                                </select>
-                            </div>
-                            <div class="report-form__field">
-                                <label for="purchase-price">Price / unit (₹)</label>
-                                <input id="purchase-price" type="number" min="0" step="0.01" placeholder="40" required>
-                            </div>
-                            <div class="report-form__field">
-                                <label for="purchase-date">Date</label>
-                                <input id="purchase-date" type="date" required>
-                            </div>
-                            <div class="report-form__actions">
-                                <button class="site-btn" type="submit">Add purchase</button>
-                            </div>
-                        </form>
+                        <div class="report-insights">
+                            <div id="report-pie" class="report-pie" aria-label="Monthly spending mix chart"></div>
+                            <div id="report-pie-legend" class="report-pie__legend"></div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="report-card__heading">
                     <div>
                         <h3 id="report-table-title">Purchases in November 2026</h3>
-                        <p id="report-data-status" class="report-note">Loading saved and online purchase data...</p>
+                        <p id="report-data-status" class="report-note">Loading submitted purchase data...</p>
                     </div>
                 </div>
                 <div class="report-table-wrap">

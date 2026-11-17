@@ -20,6 +20,8 @@
         'Ginger', 'Coriander', 'Mint', 'Lemon', 'Banana', 'Apple', 'Orange',
         'Oil', 'Mayo', 'Bread', 'Burger Patty', 'Momos'
     ];
+    var availableItems = [];
+    var pieColors = ['#7f9c5b', '#d8a84e', '#7696a8', '#bd765e', '#9d83aa'];
 
     function formatCurrency(value) {
         return '\u20b9' + Number(value || 0).toFixed(2);
@@ -83,7 +85,7 @@
             render();
             setDataStatus(onlinePurchases.length
                 ? 'Showing submitted orders and browser-saved entries.'
-                : 'No submitted orders found yet. Add a purchase entry below.');
+                : 'No submitted orders found yet. Submit an order through checkout to build this report.');
         } catch (error) {
             setDataStatus((error.message || 'Unable to load online purchase data.') +
                 ' Showing browser-saved entries instead.');
@@ -130,21 +132,39 @@
         })).filter(function (item, index, list) {
             return item && list.indexOf(item) === index;
         }).sort();
-        itemSelect.innerHTML = '<option value="all">All items</option>' + items.map(function (item) {
-            return '<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>';
-        }).join('');
-        if (items.indexOf(current) !== -1) {
+        availableItems = ['all'].concat(items);
+        document.getElementById('report-item-options').innerHTML = '<option value="All items"></option>' +
+            items.map(function (item) {
+                return '<option value="' + escapeHtml(item) + '"></option>';
+            }).join('');
+        if (current && availableItems.some(function (item) {
+            return item.toLowerCase() === current.toLowerCase();
+        })) {
             itemSelect.value = current;
         } else {
-            itemSelect.value = 'all';
+            itemSelect.value = 'All items';
         }
-        document.getElementById('purchase-item-options').innerHTML = items.map(function (item) {
-            return '<option value="' + escapeHtml(item) + '"></option>';
-        }).join('');
     }
 
     function getSelectedItem() {
-        return document.getElementById('report-item').value || 'all';
+        var value = document.getElementById('report-item').value.trim();
+
+        if (!value || value.toLowerCase() === 'all items' || value.toLowerCase() === 'all') {
+            return 'all';
+        }
+
+        var matchedItem = availableItems.find(function (item) {
+            return item.toLowerCase() === value.toLowerCase();
+        });
+
+        if (!matchedItem) {
+            var partialMatches = availableItems.filter(function (item) {
+                return item !== 'all' && item.toLowerCase().indexOf(value.toLowerCase()) === 0;
+            });
+            matchedItem = partialMatches.length === 1 ? partialMatches[0] : '';
+        }
+
+        return matchedItem || value;
     }
 
     function getVisiblePurchases(purchases, month) {
@@ -201,6 +221,42 @@
         }).join('');
     }
 
+    function renderSpendingMix(purchases) {
+        var selectedMonth = getSelectedMonth();
+        var monthPurchases = getPurchasesForMonth(purchases, selectedMonth);
+        var totals = {};
+
+        monthPurchases.forEach(function (purchase) {
+            totals[purchase.item] = (totals[purchase.item] || 0) +
+                Number(purchase.quantity || 0) * Number(purchase.price || 0);
+        });
+
+        var items = Object.keys(totals).sort(function (first, second) {
+            return totals[second] - totals[first];
+        });
+        var visibleItems = items.slice(0, 5);
+        var totalSpend = visibleItems.reduce(function (total, item) {
+            return total + totals[item];
+        }, 0);
+        var pie = document.getElementById('report-pie');
+        var legend = document.getElementById('report-pie-legend');
+        var start = 0;
+        var segments = visibleItems.map(function (item, index) {
+            var end = start + (totalSpend ? (totals[item] / totalSpend) * 100 : 0);
+            var segment = pieColors[index % pieColors.length] + ' ' + start + '% ' + end + '%';
+            start = end;
+            return segment;
+        });
+
+        pie.style.background = segments.length ? 'conic-gradient(' + segments.join(', ') + ')' : '#e8eee0';
+        legend.innerHTML = visibleItems.length ? visibleItems.map(function (item, index) {
+            var percentage = totalSpend ? Math.round((totals[item] / totalSpend) * 100) : 0;
+            return '<div class="report-pie__legend__item"><span class="report-pie__legend__swatch" style="background:' +
+                pieColors[index % pieColors.length] + '"></span><span>' + escapeHtml(item) + ' · ' +
+                percentage + '%</span></div>';
+        }).join('') : '<span class="report-note">No spending data for this month.</span>';
+    }
+
     function renderTable(purchases) {
         var selectedMonth = getSelectedMonth();
         var monthPurchases = getVisiblePurchases(purchases, selectedMonth);
@@ -226,33 +282,14 @@
         renderItemOptions(purchases);
         renderTable(purchases);
         renderChart(purchases);
+        renderSpendingMix(purchases);
     }
 
-    document.getElementById('purchase-date').value = currentMonth + '-01';
     document.getElementById('report-month').addEventListener('change', render);
-    document.getElementById('report-item').addEventListener('change', function () {
+    document.getElementById('report-item').addEventListener('input', function () {
         var purchases = readPurchases();
         renderTable(purchases);
         renderChart(purchases);
-    });
-    document.getElementById('purchase-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        var date = document.getElementById('purchase-date').value;
-        var purchases = readPurchases();
-        purchases.push({
-            id: 'purchase-' + Date.now(),
-            date: date,
-            item: document.getElementById('purchase-item').value.trim(),
-            quantity: Number(document.getElementById('purchase-quantity').value),
-            unit: document.getElementById('purchase-unit').value,
-            price: Number(document.getElementById('purchase-price').value)
-        });
-        savePurchases(purchases);
-        document.getElementById('purchase-form').reset();
-        document.getElementById('purchase-date').value = date;
-        render();
-        document.getElementById('report-month').value = date.slice(0, 7);
-        renderTable(readPurchases());
     });
     document.getElementById('report-table-body').addEventListener('click', function (event) {
         if (!event.target.classList.contains('report-delete')) {
